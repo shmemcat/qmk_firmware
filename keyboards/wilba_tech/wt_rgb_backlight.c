@@ -1967,8 +1967,38 @@ void backlight_effect_cycle_left_right(void)
         map_led_to_point( i, &point );
         // Relies on hue being 8-bit and wrapping
         hsv.h = point.x + offset + offset2;
-        rgb = hsv_to_rgb( hsv );
-        backlight_set_color( i, rgb.r, rgb.g, rgb.b );
+
+        // shmemcat doesn't like the full color wheel, so we're going to
+        // restrict it to the Blue -> Pink portion.
+        uint8_t color_wheel_start = 120; // Blue
+        uint8_t color_wheel_end = 255; // Pink
+        uint8_t color_wheel_range = color_wheel_end - color_wheel_start;
+
+        // shmemcat wants her laser dawn keys to not be affected by the cycling
+        // effect. Instead, she wants these keys to have a static color.
+        RGB laser_dawn_keys = { .r = 255, .g = 0, .b = 80 };
+        bool is_laser_dawn_key = i == 0 || i == 6 || i == 9 || i == 10 || i == 14 || i == 54;
+
+        // Since we're only using part of the color wheel, we're going to
+        // reflect it so that it starts and ends on the same color:
+        //
+        //   Blue -> Pink -> Blue
+        //
+        // Any raw hue values that are in 0 < h <= 128 will be mapped to the
+        // (Blue -> Pink) part. The rest of the hue values will be mapped to the
+        // reflection.
+        if (hsv.h <= 128) {
+            hsv.h = (hsv.h / 128.0f) * color_wheel_range + color_wheel_start;
+        } else {
+            hsv.h = ((255 - hsv.h) / 128.0f) * color_wheel_range + color_wheel_start;
+        }
+
+        if (is_laser_dawn_key) {
+            backlight_set_color( i, laser_dawn_keys.r, laser_dawn_keys.g, laser_dawn_keys.b );
+        } else {
+            rgb = hsv_to_rgb( hsv );
+            backlight_set_color( i, rgb.r, rgb.g, rgb.b );
+        }
     }
 }
 
