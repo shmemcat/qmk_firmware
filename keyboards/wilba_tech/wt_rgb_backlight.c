@@ -1976,7 +1976,7 @@ void backlight_effect_cycle_left_right(void)
 
         // shmemcat wants her laser dawn keys to not be affected by the cycling
         // effect. Instead, she wants these keys to have a static color.
-        RGB laser_dawn_keys = { .r = 255, .g = 0, .b = 80 };
+        RGB laser_dawn_keys = { .r = 255, .g = 0, .b = 60 };
         bool is_laser_dawn_key = i == 0 || i == 6 || i == 9 || i == 10 || i == 14 || i == 54;
 
         // Since we're only using part of the color wheel, we're going to
@@ -2033,7 +2033,7 @@ void backlight_effect_cycle_up_down(void)
 
         // shmemcat wants her laser dawn keys to not be affected by the cycling
         // effect. Instead, she wants these keys to have a static color.
-        RGB laser_dawn_keys = { .r = 255, .g = 0, .b = 80 };
+        RGB laser_dawn_keys = { .r = 255, .g = 0, .b = 60 };
         bool is_laser_dawn_key = i == 0 || i == 6 || i == 9 || i == 10 || i == 14 || i == 54;
 
         // Since we're only using part of the color wheel, we're going to
@@ -2184,6 +2184,22 @@ void backlight_effect_indicators_set_colors( uint8_t index, HS color )
 // colors already set
 void backlight_effect_indicators(void)
 {
+
+    if ( g_indicator_state & (1<<USB_LED_CAPS_LOCK) )
+    {
+        for (int i = 0; i < BACKLIGHT_LED_COUNT; i++) {
+            bool is_laser_dawn_key = i == 0 || i == 6 || i == 9 || i == 10 || i == 14 || i == 54;
+            RGB laser_dawn_keys = { .r = 255, .g = 0, .b = 60 };
+            RGB caps_lock_color = { .r = 255, .g = 0, .b = 20 };
+
+            if (is_laser_dawn_key) {
+                backlight_set_color( i, laser_dawn_keys.r, laser_dawn_keys.g, laser_dawn_keys.b );
+            } else {
+                backlight_set_color( i, caps_lock_color.r, caps_lock_color.g, caps_lock_color.b );
+            }
+        }
+    }
+
     if ( g_config.caps_lock_indicator.index != 255 &&
             ( g_indicator_state & (1<<USB_LED_CAPS_LOCK) ) )
     {
@@ -2945,6 +2961,14 @@ bool process_record_backlight(uint16_t keycode, keyrecord_t *record)
 
     switch(keycode)
     {
+        case MO(1):
+            if (record->event.pressed) {
+                backlight_effect_increase();
+            } else {
+                backlight_effect_decrease();
+            }
+            return false;
+            break;
         case BR_INC:
             if (record->event.pressed)
             {
