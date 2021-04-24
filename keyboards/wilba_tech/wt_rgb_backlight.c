@@ -1966,7 +1966,7 @@ void backlight_effect_cycle_left_right(void)
 
         map_led_to_point( i, &point );
         // Relies on hue being 8-bit and wrapping
-        hsv.h = point.x + offset + offset2;
+        hsv.h = point.x + offset;
 
         // shmemcat doesn't like the full color wheel, so we're going to
         // restrict it to the Blue -> Pink portion.
